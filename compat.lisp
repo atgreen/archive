@@ -2,6 +2,10 @@
 
 (in-package :archive)
 
+#+egcl
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require :egcl-posix))
+
 (defconstant +permissions-mask+ 
   #+use-sb-posix (logior sb-posix:s-irusr sb-posix:s-iwusr sb-posix:s-ixusr
 			 sb-posix:s-irgrp sb-posix:s-iwgrp sb-posix:s-ixgrp
@@ -78,6 +82,10 @@
 (defun stat (file)
   ;; Allow passing file descriptors, too.
   (let ((file (if (integerp file) file (merge-pathnames file))))
+    #+egcl
+    (if (integerp file)
+        (error "Archive does not support file-descriptor stat on EGCL")
+        (egcl-posix:stat file))
     #+sbcl
     (if (integerp file)
         (sb-posix:fstat file)
@@ -121,7 +129,7 @@
                      :uid uid :gid gid :rdev rdev
                      :mtime mtime
                      :size size :blksize blksize))
-    #-(or sbcl lispworks clisp cmucl ccl) (error "Not implemented")))
+    #-(or egcl sbcl lispworks clisp cmucl ccl) (error "Not implemented")))
 
 
 ;;; messing with stat modes
@@ -142,50 +150,57 @@
 
 ;;; stat field accessors
 (defun stat-mode (stat)
+  #+egcl (egcl-posix:stat-mode stat)
   #+sbcl (sb-posix::stat-mode stat)
   #+lispworks (file-stat-mode stat)
   #+clisp (posix:convert-mode (posix:file-stat-mode stat))
   #+(or cmucl ccl) (mode stat)
-  #-(or sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
+  #-(or egcl sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
 
 (defun stat-uid (stat)
+  #+egcl (egcl-posix:stat-uid stat)
   #+sbcl (sb-posix::stat-uid stat)
   #+lispworks (file-stat-owner-id stat)
   #+clisp (posix:file-stat-uid stat)
   #+(or cmucl ccl) (uid stat)
-  #-(or sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
+  #-(or egcl sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
 
 (defun stat-gid (stat)
+  #+egcl (egcl-posix:stat-gid stat)
   #+sbcl (sb-posix::stat-gid stat)
   #+lispworks (file-stat-group-id stat)
   #+clisp (posix:file-stat-gid stat)
   #+(or cmucl ccl) (gid stat)
-  #-(or sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
+  #-(or egcl sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
 
 (defun stat-size (stat)
+  #+egcl (egcl-posix:stat-size stat)
   #+sbcl (sb-posix::stat-size stat)
   #+lispworks (file-stat-size stat)
   #+clisp (posix:file-stat-size stat)
   #+(or cmucl ccl) (size stat)
-  #-(or sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
+  #-(or egcl sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
 
 (defun stat-mtime (stat)
+  #+egcl (egcl-posix:stat-mtime stat)
   #+sbcl (sb-posix::stat-mtime stat)
   #+lispworks (file-stat-last-modify stat)
   #+clisp (posix:file-stat-mtime stat)
   #+(or cmucl ccl) (mtime stat)
-  #-(or sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
+  #-(or egcl sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
 
 (defun stat-ino (stat)
+  #+egcl (egcl-posix:stat-ino stat)
   #+sbcl (sb-posix::stat-ino stat)
   #+lispworks (file-stat-inode stat)
   #+clisp (posix:file-stat-ino stat)
   #+(or cmucl ccl) (ino stat)
-  #-(or sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
+  #-(or egcl sbcl lispworks clisp cmucl ccl) (error "Not implemented"))
 
 (defun stat-nlink (stat)
+  #+egcl (egcl-posix:stat-nlink stat)
   #+sbcl (sb-posix::stat-nlink stat)
   #+lispworks (file-stat-links stat)
   #+clisp (posix:file-stat-nlink stat)
   #+cmucl (nlink stat)
-  #-(or sbcl lispworks clisp cmucl) (error "Not implemented"))
+  #-(or egcl sbcl lispworks clisp cmucl) (error "Not implemented"))
